@@ -36,7 +36,7 @@
         .container { 
             max-width: 1200px; 
             margin: 0 auto; 
-            padding: 0 20px; /* 모바일 여백 축소 */
+            padding: 0 20px; 
         }
 
         @media (min-width: 768px) {
@@ -65,7 +65,7 @@
 
         .ar-window {
             position: relative; width: 100%; 
-            height: 500px; /* 모바일 높이 */
+            height: 500px; 
             background: radial-gradient(circle at 50% 100%, #0f172a 0%, #050608 100%);
             border-radius: 24px; border: 1px solid var(--glass-border);
             overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
@@ -81,7 +81,6 @@
             opacity: 0.08; pointer-events: none; z-index: 2;
         }
 
-        /* 카메라 HUD */
         .camera-hud {
             position: absolute; inset: 0; padding: 20px;
             pointer-events: none; z-index: 10;
@@ -99,19 +98,20 @@
             color: var(--text-dim); text-align: right; line-height: 1.6;
         }
 
-        /* --- 천체 시각화 --- */
+        /* --- 천체 시각화 (위치 수정) --- */
         .star-layer { position: absolute; inset: 0; z-index: 1; }
         .star { position: absolute; background: #fff; border-radius: 50%; }
         .star.bright { box-shadow: 0 0 8px rgba(255,255,255,0.8); }
         .star.dim { opacity: 0.25; }
 
-        .m42-visual {
-            position: absolute; width: 100px; height: 80px; top: 52%; left: 20%;
-            background: radial-gradient(circle, rgba(148, 163, 184, 0.15) 0%, rgba(30, 41, 59, 0.1) 60%, transparent 80%);
-            filter: blur(15px); transform: rotate(-10deg);
+        /* 거품 성운(NGC 7635) 위치: 북쪽 하늘(카시오페이아)을 모사하여 상단으로 이동 */
+        .ngc7635-visual {
+            position: absolute; width: 90px; height: 90px; top: 25%; left: 35%;
+            background: radial-gradient(circle, rgba(93, 138, 168, 0.2) 0%, rgba(30, 41, 59, 0.1) 60%, transparent 80%);
+            filter: blur(12px); border-radius: 50%;
         }
         .m45-visual {
-            position: absolute; width: 110px; height: 110px; top: 18%; left: 55%;
+            position: absolute; width: 110px; height: 110px; top: 18%; left: 65%;
             background: radial-gradient(circle, rgba(93, 138, 168, 0.12) 0%, transparent 70%);
             filter: blur(20px);
         }
@@ -132,10 +132,9 @@
         }
         .label-group:active .label-text { background: var(--accent-soft-blue); }
 
-        /* 정보 카드 - 모바일 최적화 */
         .info-card {
             position: absolute; 
-            left: 15px; right: 15px; bottom: 15px; /* 모바일에서는 하단 플로팅 */
+            left: 15px; right: 15px; bottom: 15px; 
             background: var(--glass-bg); backdrop-filter: blur(40px);
             border: 1px solid var(--glass-border); border-radius: 20px;
             padding: 16px; z-index: 30; display: none;
@@ -149,7 +148,7 @@
         }
 
         .info-card.active { display: block; animation: fadeInUp 0.4s ease-out; }
-        .info-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
+        .info-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
         .info-card h4 { margin: 0; font-size: 1.1rem; color: #fff; font-weight: 500; }
         .info-card p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; margin: 8px 0; }
 
@@ -159,7 +158,7 @@
         /* --- 기능 그리드 --- */
         .feature-grid { 
             display: grid; 
-            grid-template-columns: 1fr; /* 모바일 1열 */
+            grid-template-columns: 1fr; 
             gap: 16px; 
             margin-bottom: 80px; 
         }
@@ -197,39 +196,39 @@
         <section class="ar-view-section">
             <div class="ar-window" id="arWindow">
                 <div class="star-layer" id="starLayer">
-                    <!-- 성운 위치 미세 조정 -->
-                    <div class="m42-visual" style="top: 52%; left: 25%;"></div>
-                    <div class="m45-visual" style="top: 18%; left: 60%;"></div>
+                    <!-- 거품 성운 위치 시각화 -->
+                    <div class="ngc7635-visual"></div>
+                    <div class="m45-visual"></div>
                 </div>
 
                 <svg class="connector-svg">
-                    <!-- M42 선: 성운 중심(28, 55)에서 라벨 시작점(38, 53)으로 -->
-                    <line x1="28%" y1="55%" x2="38%" y2="53%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
-                    <!-- M45 선: 성운 중심(63, 23)에서 라벨 시작점(73, 20)으로 -->
-                    <line x1="63%" y1="23%" x2="73%" y2="20%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                    <!-- NGC 7635 선: 성운 중심(39, 29)에서 라벨 시작점(45, 27)으로 -->
+                    <line x1="39%" y1="29%" x2="45%" y2="27%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                    <!-- M45 선 -->
+                    <line x1="68%" y1="23%" x2="75%" y2="21%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
                 </svg>
 
-                <!-- 라벨 위치 미세 조정 (성운보다 오른쪽으로 배치) -->
-                <div class="label-group" style="top: 51%; left: 38%;" onclick="showInfo('m42')">
-                    <span class="label-text">M42 ORION</span>
+                <!-- 라벨 위치 (북쪽 카시오페이아 영역) -->
+                <div class="label-group" style="top: 25%; left: 45%;" onclick="showInfo('ngc7635')">
+                    <span class="label-text">NGC 7635 BUBBLE</span>
                 </div>
-                <div class="label-group" style="top: 18%; left: 73%;" onclick="showInfo('m45')">
+                <div class="label-group" style="top: 19%; left: 75%;" onclick="showInfo('m45')">
                     <span class="label-text">M45 PLEIADES</span>
                 </div>
 
                 <div class="camera-hud">
                     <div class="rec-indicator"><div class="rec-dot"></div><span>AR MODE</span></div>
                     <div class="location-data">
-                        LAT: 37.56° N | LON: 126.97° E<br>ALT: +48.22° | AZ: 12.14°
+                        LAT: 37.56° N | LON: 126.97° E<br>ALT: +62.15° | AZ: 315.40°
                     </div>
                 </div>
 
-                <!-- Info Cards -->
-                <div id="card-m42" class="info-card" onclick="this.classList.remove('active')">
-                    <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=500" alt="M42">
-                    <h4>오리온 성운</h4>
-                    <p>밤하늘에서 가장 선명한 발광 성운입니다. 별들이 태어나는 요람으로 불립니다.</p>
-                    <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 1,344 ly | MAG: 4.0</span>
+                <!-- 거품 성운 카드 (이미지 유지, 내용 변경) -->
+                <div id="card-ngc7635" class="info-card" onclick="this.classList.remove('active')">
+                    <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=500" alt="NGC7635">
+                    <h4>거품 성운 (NGC 7635)</h4>
+                    <p>카시오페이아자리에 위치한 발광 성운입니다. 거대한 항성풍이 주변 성간 가스를 밀어내어 완벽한 구형의 거품 구조를 형성했습니다.</p>
+                    <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 7,100 ly | MAG: 10.0 | CON: CAS</span>
                 </div>
 
                 <div id="card-m45" class="info-card" onclick="this.classList.remove('active')">
@@ -241,7 +240,6 @@
             </div>
         </section>
 
-        <!-- Feature Grid -->
         <section class="feature-grid">
             <div class="feature-box">
                 <h3>천체 증강현실 관측</h3>
@@ -265,7 +263,6 @@
     </div>
 
     <script>
-        // 고밀도 별 생성 (모바일 성능 고려 개수 조절)
         const starLayer = document.getElementById('starLayer');
         const starCount = window.innerWidth < 768 ? 150 : 300;
         
@@ -282,22 +279,16 @@
         }
 
         function showInfo(target) {
-            // 다른 카드 닫기
             document.querySelectorAll('.info-card').forEach(card => card.classList.remove('active'));
-            // 선택한 카드 열기
             const activeCard = document.getElementById('card-' + target);
-            activeCard.classList.add('active');
-            
-            // 모바일에서 카드 외 영역 클릭 시 닫기 기능을 위해 전파 방지
+            if(activeCard) activeCard.classList.add('active');
             event.stopPropagation();
         }
 
-        // 창 클릭 시 정보 카드 닫기
         document.getElementById('arWindow').onclick = function() {
             document.querySelectorAll('.info-card').forEach(card => card.classList.remove('active'));
         };
 
-        // 배경 애니메이션
         const canvas = document.getElementById('nebula-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
