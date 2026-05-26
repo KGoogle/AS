@@ -98,20 +98,19 @@
             color: var(--text-dim); text-align: right; line-height: 1.6;
         }
 
-        /* --- 천체 시각화 (위치 수정) --- */
+        /* --- 천체 시각화 --- */
         .star-layer { position: absolute; inset: 0; z-index: 1; }
         .star { position: absolute; background: #fff; border-radius: 50%; }
         .star.bright { box-shadow: 0 0 8px rgba(255,255,255,0.8); }
         .star.dim { opacity: 0.25; }
 
-        /* 거품 성운(NGC 7635) 위치: 북쪽 하늘(카시오페이아)을 모사하여 상단으로 이동 */
         .ngc7635-visual {
-            position: absolute; width: 90px; height: 90px; top: 25%; left: 35%;
+            position: absolute; width: 90px; height: 90px; top: 15%; left: 20%;
             background: radial-gradient(circle, rgba(93, 138, 168, 0.2) 0%, rgba(30, 41, 59, 0.1) 60%, transparent 80%);
             filter: blur(12px); border-radius: 50%;
         }
         .m45-visual {
-            position: absolute; width: 110px; height: 110px; top: 18%; left: 65%;
+            position: absolute; width: 110px; height: 110px; top: 55%; left: 60%;
             background: radial-gradient(circle, rgba(93, 138, 168, 0.12) 0%, transparent 70%);
             filter: blur(20px);
         }
@@ -196,24 +195,20 @@
         <section class="ar-view-section">
             <div class="ar-window" id="arWindow">
                 <div class="star-layer" id="starLayer">
-                    <!-- 거품 성운 위치 시각화 -->
                     <div class="ngc7635-visual"></div>
                     <div class="m45-visual"></div>
                 </div>
 
                 <svg class="connector-svg">
-                    <!-- NGC 7635 선: 성운 중심(39, 29)에서 라벨 시작점(45, 27)으로 -->
-                    <line x1="39%" y1="29%" x2="45%" y2="27%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
-                    <!-- M45 선 -->
-                    <line x1="68%" y1="23%" x2="75%" y2="21%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                    <line x1="24%" y1="19%" x2="30%" y2="17%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
+                    <line x1="64%" y1="59%" x2="70%" y2="57%" stroke="rgba(255,255,255,0.25)" stroke-width="1" />
                 </svg>
 
-                <!-- 라벨 위치 (북쪽 카시오페이아 영역) -->
-                <div class="label-group" style="top: 25%; left: 45%;" onclick="showInfo('ngc7635')">
+                <div class="label-group" style="top: 15%; left: 30%;" onclick="showInfo('ngc7635')">
                     <span class="label-text">NGC 7635 BUBBLE</span>
                 </div>
-                <div class="label-group" style="top: 19%; left: 75%;" onclick="showInfo('m45')">
-                    <span class="label-text">M45 PLEIADES</span>
+                <div class="label-group" style="top: 55%; left: 70%;" onclick="showInfo('m45')">
+                    <span class="label-text">M42 ORION NEBULA</span>
                 </div>
 
                 <div class="camera-hud">
@@ -223,19 +218,20 @@
                     </div>
                 </div>
 
-                <!-- 거품 성운 카드 (이미지 유지, 내용 변경) -->
+                <!-- 거품 성운 카드 (이미지 링크 교체 완료) -->
                 <div id="card-ngc7635" class="info-card" onclick="this.classList.remove('active')">
-                    <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=500" alt="NGC7635">
+                    <img src="https://assets.science.nasa.gov/dynamicimage/assets/science/missions/hubble/releases/2016/04/STScI-01EVVGYQGFWPRBWKW0HNACJMEB.tif?w=2000" alt="NGC7635">
                     <h4>거품 성운 (NGC 7635)</h4>
-                    <p>카시오페이아자리에 위치한 발광 성운입니다. 거대한 항성풍이 주변 성간 가스를 밀어내어 완벽한 구형의 거품 구조를 형성했습니다.</p>
+                    <p>카시오페이아자리에 위치한 발광 성운입니다. 거대한 항성풍이 주변 성간 가스를 밀어내어 구형의 거품 구조를 형성했습니다.</p>
                     <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 7,100 ly | MAG: 10.0 | CON: CAS</span>
                 </div>
 
+                <!-- 오리온 성운 카드 (이미지 링크 교체 완료) -->
                 <div id="card-m45" class="info-card" onclick="this.classList.remove('active')">
-                    <img src="https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=500" alt="M45">
-                    <h4>플레이아데스 성단</h4>
-                    <p>젊고 푸른 별들이 모여 있는 산개 성단으로 육안으로도 관측 가능합니다.</p>
-                    <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 444 ly | MAG: 1.6</span>
+                    <img src="https://science.nasa.gov/wp-content/uploads/2023/04/orion-nebula-xlarge_web-jpg.webp?resize=1200,1200" alt="M42">
+                    <h4>오리온 성운 (Messier 42)</h4>
+                    <p>오리온자리에 위치한 거대한 발광 성운으로, 별이 탄생하는 역동적인 가스 구름을 관측할 수 있습니다.</p>
+                    <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 1,344 ly | MAG: 4.0</span>
                 </div>
             </div>
         </section>
