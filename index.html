@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AstroScope</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;300;400;600&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --bg-deep: #050608;
+            --ui-slate: #2c3e50;
+            --accent-soft-blue: #5d8aa8;
+            --accent-dim-purple: #483d8b;
+            --text-main: #f0f2f5;
+            --text-dim: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(10, 12, 16, 0.9);
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            letter-spacing: -0.02em;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #nebula-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; filter: blur(120px); opacity: 0.12;
+        }
+
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding: 0 20px; /* 모바일 여백 축소 */
+        }
+
+        @media (min-width: 768px) {
+            .container { padding: 0 40px; }
+        }
+
+        .hero {
+            height: 20vh; 
+            min-height: 150px;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+
+        .hero-badge {
+            font-family: 'JetBrains Mono'; font-size: 0.65rem; color: var(--accent-soft-blue);
+            letter-spacing: 0.4em; text-transform: uppercase; margin-bottom: 8px;
+        }
+
+        .hero h1 {
+            font-size: clamp(1.5rem, 8vw, 3.5rem); font-weight: 600; margin: 0;
+            color: #ffffff; letter-spacing: -0.03em;
+        }
+
+        /* --- AR VIEWPORT --- */
+        .ar-view-section { margin-bottom: 40px; }
+
+        .ar-window {
+            position: relative; width: 100%; 
+            height: 500px; /* 모바일 높이 */
+            background: radial-gradient(circle at 50% 100%, #0f172a 0%, #050608 100%);
+            border-radius: 24px; border: 1px solid var(--glass-border);
+            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+
+        @media (min-width: 1024px) {
+            .ar-window { height: 720px; border-radius: 32px; }
+        }
+
+        .ar-window::after {
+            content: ""; position: absolute; inset: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+            opacity: 0.08; pointer-events: none; z-index: 2;
+        }
+
+        /* 카메라 HUD */
+        .camera-hud {
+            position: absolute; inset: 0; padding: 20px;
+            pointer-events: none; z-index: 10;
+        }
+        .rec-indicator {
+            position: absolute; top: 20px; left: 20px;
+            display: flex; align-items: center; gap: 8px;
+            font-family: 'JetBrains Mono'; font-size: 0.7rem; color: #fff;
+        }
+        .rec-dot { width: 6px; height: 6px; background: #e11d48; border-radius: 50%; animation: blink 1.5s infinite; }
+
+        .location-data {
+            position: absolute; bottom: 20px; right: 20px; 
+            font-family: 'JetBrains Mono'; font-size: 0.6rem; 
+            color: var(--text-dim); text-align: right; line-height: 1.6;
+        }
+
+        /* --- 천체 시각화 --- */
+        .star-layer { position: absolute; inset: 0; z-index: 1; }
+        .star { position: absolute; background: #fff; border-radius: 50%; }
+        .star.bright { box-shadow: 0 0 8px rgba(255,255,255,0.8); }
+        .star.dim { opacity: 0.25; }
+
+        .m42-visual {
+            position: absolute; width: 100px; height: 80px; top: 52%; left: 20%;
+            background: radial-gradient(circle, rgba(148, 163, 184, 0.15) 0%, rgba(30, 41, 59, 0.1) 60%, transparent 80%);
+            filter: blur(15px); transform: rotate(-10deg);
+        }
+        .m45-visual {
+            position: absolute; width: 110px; height: 110px; top: 18%; left: 55%;
+            background: radial-gradient(circle, rgba(93, 138, 168, 0.12) 0%, transparent 70%);
+            filter: blur(20px);
+        }
+
+        .connector-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        
+        .label-group {
+            position: absolute; display: flex; flex-direction: column;
+            cursor: pointer; z-index: 20; pointer-events: auto;
+            user-select: none;
+        }
+        .label-text {
+            background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px);
+            padding: 6px 10px; border-radius: 4px; border-left: 2px solid var(--accent-soft-blue);
+            font-family: 'JetBrains Mono'; font-size: 0.65rem; color: #fff;
+            transition: all 0.2s; border: 1px solid var(--glass-border);
+            white-space: nowrap;
+        }
+        .label-group:active .label-text { background: var(--accent-soft-blue); }
+
+        /* 정보 카드 - 모바일 최적화 */
+        .info-card {
+            position: absolute; 
+            left: 15px; right: 15px; bottom: 15px; /* 모바일에서는 하단 플로팅 */
+            background: var(--glass-bg); backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 16px; z-index: 30; display: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        @media (min-width: 768px) {
+            .info-card {
+                left: auto; right: 25px; bottom: 25px; width: 300px;
+            }
+        }
+
+        .info-card.active { display: block; animation: fadeInUp 0.4s ease-out; }
+        .info-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 12px; margin-bottom: 12px; }
+        .info-card h4 { margin: 0; font-size: 1.1rem; color: #fff; font-weight: 500; }
+        .info-card p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; margin: 8px 0; }
+
+        @keyframes blink { 50% { opacity: 0.3; } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 기능 그리드 --- */
+        .feature-grid { 
+            display: grid; 
+            grid-template-columns: 1fr; /* 모바일 1열 */
+            gap: 16px; 
+            margin-bottom: 80px; 
+        }
+
+        @media (min-width: 768px) {
+            .feature-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        }
+
+        .feature-box { 
+            background: rgba(255,255,255,0.02); 
+            padding: 24px; border-radius: 20px; 
+            border: 1px solid var(--glass-border); 
+        }
+        .feature-box h3 { font-size: 1.1rem; margin-top: 0; margin-bottom: 10px; color: #fff; }
+        .feature-box p { color: var(--text-dim); line-height: 1.6; font-size: 0.9rem; margin: 0; }
+
+        footer { 
+            padding: 40px 20px; text-align: center; 
+            font-family: 'JetBrains Mono'; color: var(--text-dim); 
+            border-top: 1px solid var(--glass-border); 
+            font-size: 0.65rem; letter-spacing: 0.1em; 
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="nebula-canvas"></canvas>
+
+    <div class="container">
+        <header class="hero">
+            <span class="hero-badge">Mobile AR Planetarium</span>
+            <h1>AstroScope</h1>
+        </header>
+
+        <section class="ar-view-section">
+            <div class="ar-window" id="arWindow">
+                <div class="star-layer" id="starLayer">
+                    <div class="m42-visual"></div>
+                    <div class="m45-visual"></div>
+                </div>
+
+                <svg class="connector-svg">
+                    <line x1="25%" y1="56%" x2="35%" y2="52%" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+                    <line x1="60%" y1="24%" x2="70%" y2="20%" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
+                </svg>
+
+                <!-- 터치 반응을 위해 label-group 위치 조정 -->
+                <div class="label-group" style="top: 50%; left: 35%;" onclick="showInfo('m42')">
+                    <span class="label-text">M42 ORION</span>
+                </div>
+                <div class="label-group" style="top: 18%; left: 70%;" onclick="showInfo('m45')">
+                    <span class="label-text">M45 PLEIADES</span>
+                </div>
+
+                <div class="camera-hud">
+                    <div class="rec-indicator"><div class="rec-dot"></div><span>AR MODE</span></div>
+                    <div class="location-data">
+                        LAT: 37.56° N | LON: 126.97° E<br>ALT: +48.22° | AZ: 12.14°
+                    </div>
+                </div>
+
+                <!-- Info Cards -->
+                <div id="card-m42" class="info-card" onclick="this.classList.remove('active')">
+                    <img src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=500" alt="M42">
+                    <h4>오리온 성운</h4>
+                    <p>밤하늘에서 가장 선명한 발광 성운입니다. 별들이 태어나는 요람으로 불립니다.</p>
+                    <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 1,344 ly | MAG: 4.0</span>
+                </div>
+
+                <div id="card-m45" class="info-card" onclick="this.classList.remove('active')">
+                    <img src="https://images.unsplash.com/photo-1502134249126-9f3755a50d78?auto=format&fit=crop&w=500" alt="M45">
+                    <h4>플레이아데스 성단</h4>
+                    <p>젊고 푸른 별들이 모여 있는 산개 성단으로 육안으로도 관측 가능합니다.</p>
+                    <span style="color:var(--accent-soft-blue); font-family:'JetBrains Mono'; font-size:0.7rem;">DIST: 444 ly | MAG: 1.6</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Grid -->
+        <section class="feature-grid">
+            <div class="feature-box">
+                <h3>천체 증강현실 관측</h3>
+                <p>GPS와 자이로스코프를 결합하여 현재 위치의 밤하늘을 화면에 구현합니다. 심우주 물체의 위치를 실시간으로 오버레이합니다.</p>
+            </div>
+            <div class="feature-box">
+                <h3>인터랙티브 탐색</h3>
+                <p>화면의 별을 터치하면 고해상도 이미지와 상세 데이터를 확인할 수 있습니다. 수만 개의 천체 데이터베이스가 내장되어 있습니다.</p>
+            </div>
+            <div class="feature-box">
+                <h3>실시간 위치 안내</h3>
+                <p>찾고자 하는 별자리를 검색하면 화면상에 가이드 화살표를 표시하여 누구나 쉽게 천체를 찾을 수 있도록 돕습니다.</p>
+            </div>
+            <div class="feature-box">
+                <h3>시뮬레이션</h3>
+                <p>시간 설정 기능을 통해 과거와 미래의 밤하늘을 미리 확인하고 주요 천문 현상 알림을 받을 수 있습니다.</p>
+            </div>
+        </section>
+
+        <footer>&copy; AstroScope Project. 2024</footer>
+    </div>
+
+    <script>
+        // 고밀도 별 생성 (모바일 성능 고려 개수 조절)
+        const starLayer = document.getElementById('starLayer');
+        const starCount = window.innerWidth < 768 ? 150 : 300;
+        
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            const size = Math.random() * 1.5;
+            const isBright = Math.random() > 0.94;
+            star.className = isBright ? 'star bright' : 'star dim';
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.left = Math.random() * 100 + '%';
+            starLayer.appendChild(star);
+        }
+
+        function showInfo(target) {
+            // 다른 카드 닫기
+            document.querySelectorAll('.info-card').forEach(card => card.classList.remove('active'));
+            // 선택한 카드 열기
+            const activeCard = document.getElementById('card-' + target);
+            activeCard.classList.add('active');
+            
+            // 모바일에서 카드 외 영역 클릭 시 닫기 기능을 위해 전파 방지
+            event.stopPropagation();
+        }
+
+        // 창 클릭 시 정보 카드 닫기
+        document.getElementById('arWindow').onclick = function() {
+            document.querySelectorAll('.info-card').forEach(card => card.classList.remove('active'));
+        };
+
+        // 배경 애니메이션
+        const canvas = document.getElementById('nebula-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function init() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            const pCount = window.innerWidth < 768 ? 6 : 12;
+            for (let i = 0; i < pCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                    radius: Math.random() * 200 + 100,
+                    color: Math.random() > 0.5 ? '#1e293b' : '#334155',
+                    vx: Math.random() * 0.3 - 0.15, vy: Math.random() * 0.3 - 0.15
+                });
+            }
+        }
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color; ctx.fill();
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+            });
+            requestAnimationFrame(draw);
+        }
+        window.addEventListener('resize', init);
+        init(); draw();
+    </script>
+</body>
+</html>
